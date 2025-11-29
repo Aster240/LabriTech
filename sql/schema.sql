@@ -17,7 +17,7 @@ CREATE TABLE enderecos (
     cidade VARCHAR(50) NOT NULL,
     uf CHAR(2) NOT NULL,
     id_usuario_fk INT NOT NULL,
-    CONSTRAINT fk_endereco_usuario FOREIGN KEY (id_usuario_fk) REFERENCES usuarios(id_usuario_fk)
+    CONSTRAINT fk_endereco_usuario FOREIGN KEY (id_usuario_fk) REFERENCES usuarios(id_usuario)
         ON DELETE CASCADE -- Se o id do usuario for deletado, tudo sobre o endereço dele vai junto, questão de segurança; O que acham? -- 
 );
 
@@ -37,7 +37,7 @@ CREATE TABLE emprestimos (
     id_livro_fk INT NOT NULL,
     data_saida DATETIME DEFAULT CURRENT_TIMESTAMP, -- Preenche de automatico a data e hora --
     data_prevista DATE NOT NULL,
-    data_devolucao DATETIME DEFAULT NULL
+    data_devolucao DATETIME DEFAULT NULL,
     CONSTRAINT fk_emprestimo_usuario FOREIGN KEY (id_usuario_fk) REFERENCES usuarios(id_usuario),
     CONSTRAINT fk_emprestimo_livro FOREIGN KEY (id_livro_fk) REFERENCES livros(id_livro)
 );
@@ -46,7 +46,7 @@ CREATE TABLE multas(
     id_multa INT AUTO_INCREMENT PRIMARY KEY,
     id_emprestimo_fk INT NOT NULL,
     valor DECIMAL(10,2) NOT NULL,
-    pago BOOLEAN DEFAULT FALSE, -- Botei por Default como falso porque se tem multa automaticamente é pq ainda não pagaram --
+    pago BOOLEAN DEFAULT FALSE -- Botei por Default como falso porque se tem multa automaticamente é pq ainda não pagaram --
 );
 
 CREATE TABLE log_auditoria (
@@ -55,7 +55,7 @@ CREATE TABLE log_auditoria (
     acao VARCHAR(20) NOT NULL,
     usuario_responsavel VARCHAR(100) NOT NULL,
     dados_antigos TEXT,
-    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP; 
+    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Os indices que David pediu -- 
@@ -81,7 +81,7 @@ GRANT SELECT ON libritech.usuarios TO 'usr_estagiario'@'localhost';
 GRANT INSERT ON libritech.emprestimos TO 'usr_estagiario'@'localhost';
 
 CREATE USER 'usr_aluno'@'localhost' IDENTIFIED BY 'senha_idiota';
-GRANT SELECT ON libritech.vw_acerto_publico TO 'usr_aluno'@'localhost'; -- So dar fazer após criação da view --
+GRANT SELECT ON libritech.vw_acervo_publico TO 'usr_aluno'@'localhost'; -- So dar fazer após criação da view --
 GRANT SELECT ON libritech.vw_ranking_leitura TO 'usr_aluno'@'localhost';
 
 FLUSH PRIVILEGES;
@@ -95,7 +95,7 @@ CREATE PROCEDURE sp_transacao_emprestimo (
     IN p_id_livro INT
 )
 BEGIN 
-    DECLARE v_estoque INT,
+    DECLARE v_estoque INT;
     DECLARE v_pendencias INT;
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
@@ -293,12 +293,12 @@ WHERE e.data_devolucao IS NULL AND e.data_prevista < CURRENT_DATE;
 CREATE VIEW vw_ranking_leitura AS
 SELECT
     l.titulo,
-    COUNT(e.id_emprestimo) AS 'Total Emprestimos'
+    COUNT(e.id_emprestimo) AS 'total_emprestimos'
 FROM livros l
 JOIN emprestimos e ON l.id_livro = e.id_livro_fk
 GROUP BY l.titulo
-ORDER BY total_emprestimos DESC;
-LIMIT 10; --Corta o resultado para os 10 mais emprestados --
+ORDER BY total_emprestimos DESC
+LIMIT 10; -- Corta o resultado para os 10 mais emprestados --
 
 -- View Dashboard Financeiro --
 CREATE VIEW vw_dashboard_financeiro AS
