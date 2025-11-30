@@ -18,8 +18,6 @@ public class Main {
         try {
             // 1. Conecta
             conn = Conn.getConnection(dbUser, dbPass);
-
-            // 2. Prepara o DAO
             bookDAO dao = new bookDAO(conn);
 
             // 3. Escolhe o perfil

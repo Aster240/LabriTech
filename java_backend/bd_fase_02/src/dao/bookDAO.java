@@ -76,4 +76,49 @@ public class bookDAO {
         }
         return resultado.toString();
     }
+
+    // para devolução
+    public void devolverBook(int idEmprestimo) throws SQLException {
+        String sql = "CALL sp_transacao_devolucao(?)";
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql)){
+            ps.setInt(1, idEmprestimo);
+
+            ps.execute();
+        }
+    }
+
+    //Dash
+    public String verDashboardFinanceiro() throws SQLException {
+        String sql = "SELECT * FROM vw_dashboard_financeiro";
+        StringBuilder texto = new StringBuilder();
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql);
+        ResultSet rs = ps.executeQuery()){
+            if (rs.next()){
+                texto.append("Multas pagas: ").append(rs.getInt("total_multas_pagas")).append("\n");
+                texto.append("Arrecadação Total: R$ ").append(rs.getDouble("arrecadacao_total")).append("\n");
+
+            }
+        }
+        return texto.toString();
+    }
+
+    // rank
+    public String verRankingLeitura() throws SQLException {
+        String sql = "SELECT * FROM vw_ranking_leitura"; //lembrar, limite está dentro da lógica do sheme.
+        StringBuilder texto = new StringBuilder();
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql);
+        ResultSet rs = ps.executeQuery()){
+            int pos = 1;
+            while (rs.next()){
+                texto.append(pos).append(" - ").append(rs.getString("titulo")).append("\n");
+                pos++;
+            }
+        }
+        return texto.toString();
+    }
+
+
 }
