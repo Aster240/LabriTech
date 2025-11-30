@@ -18,7 +18,7 @@ CREATE TABLE enderecos (
     uf CHAR(2) NOT NULL,
     id_usuario_fk INT NOT NULL,
     CONSTRAINT fk_endereco_usuario FOREIGN KEY (id_usuario_fk) REFERENCES usuarios(id_usuario)
-        ON DELETE CASCADE -- Se o id do usuario for deletado, tudo sobre o endereço dele vai junto, questão de segurança; O que acham? -- 
+        ON DELETE CASCADE /* Se o id do usuario for deletado, tudo sobre o endereço dele vai junto, questão de segurança; O que acham? */
 );
 
 CREATE TABLE livros (
