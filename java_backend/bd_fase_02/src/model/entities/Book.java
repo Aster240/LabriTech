@@ -40,6 +40,7 @@ public class Book {
 
     @Override
     public String toString() {
-        return String.format("depois eu faço isso!"); // não sei o por que dos erros...
+        return "Livro: " + title + " | Autor: " + author + " | ISBN: " + isbn;
     }
 }
+

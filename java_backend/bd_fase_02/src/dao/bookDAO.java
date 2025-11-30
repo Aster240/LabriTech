@@ -1,6 +1,8 @@
 package dao;
 
 import model.entities.Book;
+
+import javax.swing.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -118,6 +120,46 @@ public class bookDAO {
             }
         }
         return texto.toString();
+    }
+
+    //histórico
+    public String verMeusEmprestimos(int idAluno) throws SQLException {
+        String sql = "SELECT l.titulo, e.data_saida, e.data_previsao" +
+                "FROM emprestimos" +
+                "JOIN livros l ON e.id_livro_fk = l.id_livro" +
+                "WHERE e.id_aluno_fk = ?";
+
+        StringBuilder texto = new StringBuilder("==MEU EMPRESTIMOS==\n");
+        try (PreparedStatement ps = conexao.prepareStatement(sql)){
+            ps.setInt(1, idAluno);
+            try (java.sql.ResultSet rs = ps.executeQuery()){
+                if (!rs.next()){ //se vázio
+                    return "Nenhum empréstimo encontrado para esse ID";
+                }
+                while (rs.next()){
+                    texto.append("Livro: ").append(rs.getString("titulo")).append("\n");
+                    texto.append("Pegou em: ").append(rs.getString("data_saida")).append("\n");
+                    texto.append("Devolver até: ").append(rs.getString("data_previsao")).append("\n");
+                    texto.append("------------------------------\n");
+                }
+            }
+        }
+        return texto.toString();
+    }
+
+    private static void exibirEmScroll(String texto){
+        javax.swing.JTextArea area = new javax.swing.JTextArea(texto);
+        area.setRows(10);
+        area.setColumns(30);
+        area.setEditable(false);
+        area.setWrapStyleWord(true);
+        area.setLineWrap(true);
+
+        JScrollPane scrollPane = new JScrollPane(area);
+        scrollPane.setPreferredSize(new java.awt.Dimension(500, 400));
+
+        JOptionPane.showMessageDialog(null, scrollPane, "Resultado", JOptionPane.INFORMATION_MESSAGE);
+
     }
 
 

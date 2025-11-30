@@ -1,13 +1,15 @@
 package application;
 
 import dao.bookDAO;
-import javax.swing.JOptionPane;
+
+import javax.swing.*;
+import java.awt.*;
 import java.sql.SQLException;
 
 public class MenuAluno {
 
     public static void iniciar(bookDAO dao) {
-        String[] actions = {"1. Consultar Acervo", "Sair"};
+        String[] actions = {"1. Consultar Acervo", "2. Menu Empréstimo" ,"Sair"};
 
         while(true) {
             String op = (String) JOptionPane.showInputDialog(null, "Área do Aluno", "Menu Aluno",
@@ -19,12 +21,21 @@ public class MenuAluno {
                 if (op.startsWith("1")) {
                     String lista = dao.listarAcervo();
 
-                    javax.swing.JTextArea area = new javax.swing.JTextArea(lista);
+                    JTextArea area = new JTextArea(lista);
                     area.setEditable(false);
-                    javax.swing.JScrollPane scroll = new javax.swing.JScrollPane(area);
-                    scroll.setPreferredSize(new java.awt.Dimension(400, 300));
+                    JScrollPane scroll = new JScrollPane(area);
+                    scroll.setPreferredSize(new Dimension(400, 300));
 
                     JOptionPane.showMessageDialog(null, scroll);
+                }
+                else if (op.startsWith("2")) {
+                    //login do banco é genérico, pede um id de aluno
+                    String idStr = JOptionPane.showInputDialog("Digite o ID do Aluno");
+                    if(idStr != null) {
+                        int id = Integer.parseInt(idStr);
+                        String meusLivros = dao.verMeusEmprestimos(id);
+                        exibirEmScroll(meusLivros);
+                    }
                 }
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(null, "Erro ao buscar livros: " + e.getMessage());

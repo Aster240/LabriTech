@@ -18,6 +18,8 @@ public class Main {
         try {
             // 1. Conecta
             conn = Conn.getConnection(dbUser, dbPass);
+
+            // 2. Prepara o DAO principal (usado pelo Aluno)
             bookDAO dao = new bookDAO(conn);
 
             // 3. Escolhe o perfil
@@ -25,9 +27,9 @@ public class Main {
             int choice = JOptionPane.showOptionDialog(null, "Sistema LibriTech\nPerfil: " + dbUser, "Login",
                     0, 3, null, options, options[0]);
 
-            // 4. Redireciona para a classe correta
+            // 4. Redireciona
             if (choice == 0) {
-                MenuFuncionario.iniciar(dao);
+                MenuFuncionario.iniciar(conn);
             } else if (choice == 1) {
                 MenuAluno.iniciar(dao);
             }
