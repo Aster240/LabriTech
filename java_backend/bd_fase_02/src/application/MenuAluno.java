@@ -1,7 +1,6 @@
 package application;
 
 import dao.bookDAO;
-
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
@@ -37,9 +36,24 @@ public class MenuAluno {
                         exibirEmScroll(meusLivros);
                     }
                 }
+
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(null, "Erro ao buscar livros: " + e.getMessage());
             }
         }
+    }
+    public static void exibirEmScroll(String texto){
+        javax.swing.JTextArea area = new javax.swing.JTextArea(texto);
+        area.setRows(10);
+        area.setColumns(30);
+        area.setEditable(false);
+        area.setWrapStyleWord(true);
+        area.setLineWrap(true);
+
+        JScrollPane scrollPane = new JScrollPane(area);
+        scrollPane.setPreferredSize(new java.awt.Dimension(500, 400));
+
+        JOptionPane.showMessageDialog(null, scrollPane, "Resultado", JOptionPane.INFORMATION_MESSAGE);
+
     }
 }
