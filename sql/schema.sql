@@ -47,6 +47,7 @@ CREATE TABLE multas(
     id_emprestimo_fk INT NOT NULL,
     valor DECIMAL(10,2) NOT NULL,
     pago BOOLEAN DEFAULT FALSE -- Botei por Default como falso porque se tem multa automaticamente é pq ainda não pagaram --
+    CONSTRAINT fk_multa_emprestimo FOREIGN KEY (id_emprestimo_fk) REFERENCES emprestimos(id_emprestimo) -- como já tem o banco, bota ALTER TABLE, deixei aqui assim pq David deve criar pra testar -- 
 );
 
 CREATE TABLE log_auditoria (
@@ -81,7 +82,7 @@ GRANT SELECT ON libritech.usuarios TO 'usr_estagiario'@'localhost';
 GRANT INSERT ON libritech.emprestimos TO 'usr_estagiario'@'localhost';
 
 CREATE USER 'usr_aluno'@'localhost' IDENTIFIED BY 'senha_idiota';
-GRANT SELECT ON libritech.vw_acervo_publico TO 'usr_aluno'@'localhost'; -- So dar fazer após criação da view --
+GRANT SELECT ON libritech.vw_acervo_publico TO 'usr_aluno'@'localhost'; -- So da pra fazer após criação da view --
 GRANT SELECT ON libritech.vw_ranking_leitura TO 'usr_aluno'@'localhost';
 
 FLUSH PRIVILEGES;
@@ -132,20 +133,26 @@ DELIMITER $$
 
 CREATE PROCEDURE sp_renovar_emprestimo (
     IN p_id_emprestimo INT
-    )
-    BEGIN
-        DECLARE v_status_livro VARCHAR(20);
-        DECLARE v_id_livro INT;
-        SELECT id_livro_fk INTO v_id_livro
-        FROM emprestimos
+)
+BEGIN
+    DECLARE v_status_livro VARCHAR(20);
+    DECLARE v_id_livro INT;
+    SELECT id_livro_fk INTO v_id_livro
+    FROM emprestimos
+    WHERE id_emprestimo = p_id_emprestimo;
+
+    SELECT status INTO v_status_livro
+    FROM livros
+    WHERE id_livro = v_id_livro;
+
+    IF v_status_livro = 'RESERVADO' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'ERRO: Livro reservado ou indisponivel.';
+    ELSE 
+        UPDATE emprestimos
+        SET data_prevista = DATE_ADD(data_prevista, INTERVAL 7 DAY)
         WHERE id_emprestimo = p_id_emprestimo;
-        IF v_status_livro = 'RESERVADO' THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "ERRO: Livro reservado ou indisponivel.";
-        ELSE 
-            UPDATE emprestimos
-            SET data_prevista = DATE_ADD(data_prevista, INTERVAL 7 DAY)
-            WHERE id_emprestimo = p_id_emprestimo;
-        END IF;
+    END IF;
+
 END$$
 
 DELIMITER ;
@@ -228,7 +235,7 @@ CREATE TRIGGER trg_auditoria_delecao
 AFTER DELETE ON livros
 FOR EACH ROW
 BEGIN
-    INSERT INTO log_auditoria (tabela_afetada, acao, usuario_resposanvel, dados_antigos)
+    INSERT INTO log_auditoria (tabela_afetada, acao, usuario_responsavel, dados_antigos)
     VALUES ('livros', 'DELETE', USER(), CONCAT('ID: ', OLD.id_livro, ', Titulo: ', OLD.titulo, ', ISBN: ', OLD.isbn)
     );
 END$$
