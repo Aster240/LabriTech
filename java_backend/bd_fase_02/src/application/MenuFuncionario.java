@@ -118,16 +118,25 @@ public class MenuFuncionario {
                     } else {
                         u = new Employee();
                     }
+
                     u.setRule(regraSelecionada);
                     u.setName(pedir("Nome Completo:"));
                     u.setCpf(pedir("CPF:"));
                     u.setEmail(pedir("Email:"));
                     u.setPassword(pedir("Senha:"));
 
+
                     String rua = pedir("Rua:");
                     String bairro = pedir("Bairro:");
                     String cidade = pedir("Cidade:");
                     String uf = pedir("UF (2 letras):");
+
+
+                    if (rua == null || bairro == null || cidade == null || uf == null ||
+                            rua.isBlank() || bairro.isBlank() || cidade.isBlank() || uf.isBlank()) {
+                        JOptionPane.showMessageDialog(null, "Usuário NÂO cadastrado!");
+                        break;
+                    }
 
                     userDao.cadastrarUsuarioCompleto(u, rua, bairro, cidade, uf);
                     JOptionPane.showMessageDialog(null, "Usuário cadastrado com sucesso!");

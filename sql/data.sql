@@ -41,7 +41,10 @@ INSERT INTO livros (id_livro, titulo, autor, isbn, preco_custo, quantidade_estoq
 (5, 'Harry Potter e a Pedra Filosofal', 'J.K. Rowling', '9788532530783', 45.00, 2, 'DISPONIVEL'),
 (6, 'Entendendo Algoritmos', 'Aditya Bhargava', '9788575225639', 60.00, 1, 'DISPONIVEL');
 
--- 6. INSERINDO EMPRESTIMOS (Agora funciona mesmo sendo meia-noite!)
+INSERT INTO livros (id_livro, titulo, autor, isbn, preco_custo, quantidade_estoque, status) VALUES
+    (8, 'Entendendo Algoritmos', 'Aditya Bhargava', '9788', 60.00, 1, 'DISPONIVEL');
+
+                                                                                                -- 6. INSERINDO EMPRESTIMOS (Agora funciona mesmo sendo meia-noite!)
 INSERT INTO emprestimos (id_emprestimo, id_usuario_fk, id_livro_fk, data_saida, data_prevista, data_devolucao) VALUES
 -- João pegou e devolveu (Sem multa)
 (1, 4, 1, '2023-10-01 10:00:00', '2023-10-08', '2023-10-07 14:00:00'),
