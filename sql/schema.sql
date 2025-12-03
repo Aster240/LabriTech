@@ -325,6 +325,7 @@ FLUSH PRIVILEGES;
 ======================================================= */
 
 SHOW TRIGGERS LIKE 'emprestimos';
+
 -- pequena correção na view acervo
 
 CREATE OR REPLACE VIEW vw_acervo_publico AS
@@ -360,6 +361,7 @@ JOIN livros l ON e.id_livro_fk = l.id_livro
 JOIN usuarios u ON e.id_usuario_fk = u.id_usuario
 WHERE e.data_devolucao IS NULL;
 
+-- ------- teste de multa
 SELECT * FROM emprestimos;
 
 SELECT * FROM multas WHERE id_emprestimo_fk = 9;
@@ -371,7 +373,10 @@ WHERE id_emprestimo = 5; --
 
 UPDATE multas SET pago = 1 WHERE id_emprestimo_fk = 9;
 
+---- -------
+
 -- TESTE EXPLAIN
+
 
 -- 1. rodar isso primeiro (seguir a ordem númerica de execução okay?)
 DROP INDEX idx_livro_titulo ON livros;
