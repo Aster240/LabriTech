@@ -43,7 +43,6 @@ public class MenuFuncionario {
             try {
                 // 1. Cadastrar Livro
                 if (op.startsWith("1")) {
-                    // Se cancelar ele sai do bloco try.
                     String titulo = pedir("Título do Livro:");
                     String autor = pedir("Autor:");
                     String isbn = pedir("ISBN:");
