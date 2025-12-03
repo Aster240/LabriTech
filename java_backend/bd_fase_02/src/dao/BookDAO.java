@@ -62,8 +62,10 @@ public class BookDAO {
     public DefaultTableModel listarAcervoTabela() throws SQLException {
         String sql = "SELECT * FROM vw_acervo_publico";
         DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("ID");
         modelo.addColumn("Título");
         modelo.addColumn("Autor");
+        modelo.addColumn("Qtd");
         modelo.addColumn("Situação");
         modelo.addColumn("Disponibilidade");
 
@@ -71,9 +73,11 @@ public class BookDAO {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 modelo.addRow(new Object[]{
+                        rs.getInt("id_livro"),
                         rs.getString("Titulo"),
                         rs.getString("Autor"),
-                        rs.getString("Status Disponibilidade"),
+                        rs.getInt("Qtd"),
+                        rs.getString("Situação"),
                         rs.getString("Disponibilidade")
                 });
             }
@@ -125,4 +129,30 @@ public class BookDAO {
         }
         return sb.toString();
     }
+    public DefaultTableModel listarEmprestimosAtivos() throws SQLException {
+        String sql = "SELECT * FROM vw_livros_emprestados";
+
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("ID");
+        modelo.addColumn("Livro");
+        modelo.addColumn("Quem pegou");
+        modelo.addColumn("Retirado em");
+        modelo.addColumn("Vence em");
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                modelo.addRow(new Object[]{
+                        rs.getInt("ID"),
+                        rs.getString("Livro"),
+                        rs.getString("Quem pegou"),
+                        rs.getString("Retirado em"),
+                        rs.getString("Vence em")
+                });
+            }
+        }
+        return modelo;
+    }
 }
+

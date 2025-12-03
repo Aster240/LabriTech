@@ -2,6 +2,7 @@ package application;
 
 import dao.BookDAO;
 import dao.UserDAO;
+import dao.AuditDAO; // <--- 1. IMPORT NOVO
 import model.entities.Book;
 import model.entities.User;
 import model.entities.Student;
@@ -16,13 +17,13 @@ import java.sql.SQLException;
 
 public class MenuFuncionario {
 
-    // (Cancelamento)
     private static class OperacaoCanceladaException extends RuntimeException {}
 
     public static void iniciar(Connection conn) {
 
         BookDAO bookDao = new BookDAO(conn);
         UserDAO userDao = new UserDAO(conn);
+        AuditDAO auditDao = new AuditDAO(conn); // <--- 2. INSTANCIA NOVA
 
         String[] actions = {
                 "1. Cadastrar Livro",
@@ -34,6 +35,8 @@ public class MenuFuncionario {
                 "7. Cadastrar Novo Usuário",
                 "8. Backup do Sistema",
                 "9. Listar livros",
+                "10. Ver Logs de Auditoria",
+                "11. Ver Livros Emprestados",
                 "Voltar"
         };
 
@@ -45,12 +48,10 @@ public class MenuFuncionario {
 
             try {
                 // 1. Cadastrar Livro
-                if (op.startsWith("1")) {
+                if (op.startsWith("1.")) {
                     String titulo = pedir("Título do Livro:");
                     String autor = pedir("Autor:");
                     String isbn = pedir("ISBN:");
-
-                    // Tratamento de vírgula para ponto no preço
                     double preco = Double.parseDouble(pedir("Preço (ex: 59.90):").replace(",", "."));
                     int qtd = Integer.parseInt(pedir("Quantidade em Estoque:"));
 
@@ -63,15 +64,12 @@ public class MenuFuncionario {
                 else if (op.startsWith("2")) {
                     int idUser = Integer.parseInt(pedir("ID do Usuário:"));
                     int idLivro = Integer.parseInt(pedir("ID do Livro:"));
-
-                    // Lógica simples de prazo para apresentação
                     String[] tipos = {"Aluno (7 dias)", "Funcionário (14 dias)"};
                     int escolha = JOptionPane.showOptionDialog(null, "Quem está pegando o livro?", "Regra de Prazo",
                             0, 3, null, tipos, tipos[0]);
-                    if (escolha == -1) throw new OperacaoCanceladaException(); // Se fechar a janela de escolha
+                    if (escolha == -1) throw new OperacaoCanceladaException();
 
                     int dias = (escolha == 0) ? 7 : 14;
-
                     bookDao.emprestarBook(idUser, idLivro, dias);
                     JOptionPane.showMessageDialog(null, "Empréstimo realizado!");
                 }
@@ -112,12 +110,7 @@ public class MenuFuncionario {
 
                     if (tipoEscolha == -1) throw new OperacaoCanceladaException();
                     Rule regraSelecionada = Rule.valueOf(tipos[tipoEscolha]);
-                    User u;
-                    if (regraSelecionada == Rule.ALUNO) {
-                        u = new Student();
-                    } else {
-                        u = new Employee();
-                    }
+                    User u = (regraSelecionada == Rule.ALUNO) ? new Student() : new Employee();
 
                     u.setRule(regraSelecionada);
                     u.setName(pedir("Nome Completo:"));
@@ -125,16 +118,13 @@ public class MenuFuncionario {
                     u.setEmail(pedir("Email:"));
                     u.setPassword(pedir("Senha:"));
 
-
                     String rua = pedir("Rua:");
                     String bairro = pedir("Bairro:");
                     String cidade = pedir("Cidade:");
                     String uf = pedir("UF (2 letras):");
 
-
-                    if (rua == null || bairro == null || cidade == null || uf == null ||
-                            rua.isBlank() || bairro.isBlank() || cidade.isBlank() || uf.isBlank()) {
-                        JOptionPane.showMessageDialog(null, "Usuário NÂO cadastrado!");
+                    if (rua.isBlank() || bairro.isBlank()) {
+                        JOptionPane.showMessageDialog(null, "Dados incompletos!");
                         break;
                     }
 
@@ -142,30 +132,50 @@ public class MenuFuncionario {
                     JOptionPane.showMessageDialog(null, "Usuário cadastrado com sucesso!");
                 }
 
-                // 8. Backup // simulação
+                // 8. Backup
                 else if (op.startsWith("8")) {
                     try {
                         String cmd = "mysqldump -u root -p1234 libritech -r backup.sql";
-                        JOptionPane.showMessageDialog(null, "Executando: " + cmd + "\n(Verifique a pasta do projeto)");
+                        JOptionPane.showMessageDialog(null, "Simulação: " + cmd);
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Simulação de Backup concluída.");
+                        JOptionPane.showMessageDialog(null, "Backup simulado.");
                     }
-
                 }
 
-                // 9. Listar livro Backup // simulação
+                // 9. Listar Livros
                 else if (op.startsWith("9")) {
-                    try {
-                        DefaultTableModel model = bookDao.listarAcervoTabela();
-                        JTable tabela = new JTable(model);
-                        tabela.setFillsViewportHeight(true);
-                        JScrollPane scroll = new JScrollPane(tabela);
-                        scroll.setPreferredSize(new Dimension(500, 300));
+                    DefaultTableModel model = bookDao.listarAcervoTabela();
+                    JTable tabela = new JTable(model);
+                    tabela.setFillsViewportHeight(true);
+                    JScrollPane scroll = new JScrollPane(tabela);
+                    scroll.setPreferredSize(new Dimension(600, 300));
+                    JOptionPane.showMessageDialog(null, scroll, "Acervo", JOptionPane.PLAIN_MESSAGE);
+                }
 
-                        JOptionPane.showMessageDialog(null, scroll, "Acervo Disponível", JOptionPane.PLAIN_MESSAGE);
-                    } catch (Exception ex) {
-                        System.out.println("nao achei nada");
-                    }
+                // 10. ver logs
+                else if (op.startsWith("10")) {
+                    DefaultTableModel model = auditDao.listarLogs();
+                    JTable tabela = new JTable(model);
+
+
+                    JScrollPane scroll = new JScrollPane(tabela);
+                    scroll.setPreferredSize(new Dimension(900, 300));
+
+                    JOptionPane.showMessageDialog(null, scroll, "Logs de Auditoria", JOptionPane.PLAIN_MESSAGE);
+                }
+
+                else if (op.startsWith("11.")) {
+                    DefaultTableModel model = bookDao.listarEmprestimosAtivos();
+                    JTable tabela = new JTable(model);
+
+
+                    tabela.getColumnModel().getColumn(1).setPreferredWidth(200);
+                    tabela.getColumnModel().getColumn(2).setPreferredWidth(150);
+
+                    JScrollPane scroll = new JScrollPane(tabela);
+                    scroll.setPreferredSize(new Dimension(800, 300));
+
+                    JOptionPane.showMessageDialog(null, scroll, "Livros atualmente emprestados", JOptionPane.PLAIN_MESSAGE);
                 }
 
             } catch (OperacaoCanceladaException e) {
@@ -174,25 +184,31 @@ public class MenuFuncionario {
             } catch (SQLException e) {
                 if (e.getMessage().toLowerCase().contains("denied") || e.getErrorCode() == 1142) {
                     JOptionPane.showMessageDialog(null,
-                            "ERRO: ACESSO NEGADO!\nSeu perfil não tem permissão.",
+                            "ERRO: ACESSO NEGADO!\nSeu perfil (" + getUsuarioAtual(conn) + ") não tem permissão.",
                             "Segurança", JOptionPane.ERROR_MESSAGE);
                 } else {
                     JOptionPane.showMessageDialog(null, "Erro SQL: " + e.getMessage());
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(null, "Erro: Você deveria digitar um número!");
+                JOptionPane.showMessageDialog(null, "Erro: Digite apenas números nos campos de ID/Quantidade!");
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Erro: " + e.getMessage());
             }
         }
     }
 
-    //  Se for null (cancelar), lança erro pra sair do fluxo.
     private static String pedir(String mensagem) {
         String valor = JOptionPane.showInputDialog(mensagem);
-        if (valor == null) {
-            throw new OperacaoCanceladaException(); // Aborta tudo
-        }
+        if (valor == null) throw new OperacaoCanceladaException();
         return valor;
+    }
+
+
+    private static String getUsuarioAtual(Connection conn) {
+        try {
+            return conn.getMetaData().getUserName();
+        } catch (SQLException e) {
+            return "Desconhecido";
+        }
     }
 }

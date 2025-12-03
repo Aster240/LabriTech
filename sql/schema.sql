@@ -294,7 +294,9 @@ GRANT SELECT, INSERT, UPDATE ON libritech.emprestimos TO 'usr_bibliotecario'@'lo
 GRANT SELECT ON libritech.vw_acervo_publico TO 'usr_bibliotecario'@'localhost';
 GRANT SELECT ON libritech.vw_ranking_leitura TO 'usr_bibliotecario'@'localhost';
 GRANT SELECT ON libritech.enderecos TO 'usr_bibliotecario'@'localhost';
+GRANT SELECT ON libritech.vw_livros_emprestados TO 'usr_bibliotecario'@'localhost';
 GRANT SELECT, INSERT ON libritech.log_auditoria TO 'usr_bibliotecario'@'localhost';
+
 -- Permissão para rodar as procedures
 GRANT EXECUTE ON PROCEDURE libritech.sp_transacao_emprestimo TO 'usr_bibliotecario'@'localhost';
 GRANT EXECUTE ON PROCEDURE libritech.sp_renovar_emprestimo TO 'usr_bibliotecario'@'localhost';
@@ -317,3 +319,68 @@ GRANT SELECT ON libritech.vw_ranking_leitura TO 'usr_aluno'@'localhost';
 GRANT EXECUTE ON PROCEDURE libritech.sp_historico_usuario TO 'usr_aluno'@'localhost';
 
 FLUSH PRIVILEGES;
+
+
+/* 6. CORREÇÕES E ADIÇÕES DEPOIS DA APRESENTAÇÃO DE HOJE 03/12/2025
+======================================================= */
+
+SHOW TRIGGERS LIKE 'emprestimos';
+-- pequena correção na view acervo
+
+CREATE OR REPLACE VIEW vw_acervo_publico AS
+SELECT
+    id_livro,
+    titulo AS 'Titulo',
+    autor AS 'Autor',
+    quantidade_estoque AS 'Qtd',
+
+    CASE
+        WHEN quantidade_estoque > 0 THEN status
+        ELSE 'INDISPONIVEL'
+    END AS 'Situação',
+
+
+    CASE
+        WHEN quantidade_estoque > 0 THEN 'Disponivel'
+        ELSE 'Esgotado'
+    END AS 'Disponibilidade'
+FROM livros;
+
+-- nova/alterada view de livros_emprestados e testes
+
+CREATE OR REPLACE VIEW vw_livros_emprestados AS
+SELECT
+    e.id_emprestimo AS 'ID',
+    l.titulo AS 'Livro',
+    u.nome AS 'Quem pegou',
+    DATE_FORMAT(e.data_saida, '%d/%m/%Y') AS 'Retirado em',
+    DATE_FORMAT(e.data_prevista, '%d/%m/%Y') AS 'Vence em'
+FROM emprestimos e
+JOIN livros l ON e.id_livro_fk = l.id_livro
+JOIN usuarios u ON e.id_usuario_fk = u.id_usuario
+WHERE e.data_devolucao IS NULL;
+
+SELECT * FROM emprestimos;
+
+SELECT * FROM multas WHERE id_emprestimo_fk = 9;
+
+
+UPDATE emprestimos
+SET data_prevista = DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+WHERE id_emprestimo = 5; --
+
+UPDATE multas SET pago = 1 WHERE id_emprestimo_fk = 9;
+
+-- TESTE EXPLAIN
+
+-- 1. rodar isso primeiro (seguir a ordem númerica de execução okay?)
+DROP INDEX idx_livro_titulo ON livros;
+
+-- 2. depois rodar isso
+EXPLAIN SELECT * FROM livros WHERE titulo = 'Dom Casmurro';
+
+-- 3. depois isso
+CREATE INDEX idx_livro_titulo ON livros(titulo);
+
+-- 4. por último, rodar isso aq
+EXPLAIN SELECT * FROM livros WHERE titulo = 'Dom Casmurro';
