@@ -1,13 +1,14 @@
 package application;
 
-import dao.bookDAO;
+import dao.BookDAO;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 
 public class MenuAluno {
 
-    public static void iniciar(bookDAO dao) {
+    public static void iniciar(BookDAO dao) {
         String[] actions = {"1. Consultar Acervo", "2. Menu Empréstimo" ,"Sair"};
 
         while(true) {
@@ -18,26 +19,22 @@ public class MenuAluno {
 
             try {
                 if (op.startsWith("1")) {
-                    String lista = dao.listarAcervo();
-
-                    JTextArea area = new JTextArea(lista);
-                    area.setEditable(false);
-                    JScrollPane scroll = new JScrollPane(area);
-                    scroll.setPreferredSize(new Dimension(400, 300));
-
-                    JOptionPane.showMessageDialog(null, scroll);
+                    DefaultTableModel modelo = dao.listarAcervoTabela();
+                    JTable tabela = new JTable(modelo);
+                    JScrollPane scroll = new JScrollPane(tabela);
+                    scroll.setPreferredSize(new Dimension(600, 300)); // Define o tamanho da janela
+                    JOptionPane.showMessageDialog(null, scroll, "Acervo Disponível", JOptionPane.PLAIN_MESSAGE);
                 }
+
                 else if (op.startsWith("2")) {
-                    //login do banco é genérico, pede um id de aluno
-                    String idStr = JOptionPane.showInputDialog("Digite o ID do Aluno");
-                    if(idStr != null) {
-                        int id = Integer.parseInt(idStr);
-                        String meusLivros = dao.verMeusEmprestimos(id);
+                    String idStr = JOptionPane.showInputDialog("Digite o seu ID de Aluno:");
+                    if(idStr != null && !idStr.isEmpty()) {
+                        String meusLivros = dao.verMeusEmprestimos(Integer.parseInt(idStr));
                         exibirEmScroll(meusLivros);
                     }
                 }
 
-            } catch (SQLException e) {
+            }catch (SQLException e) {
                 JOptionPane.showMessageDialog(null, "Erro ao buscar livros: " + e.getMessage());
             }
         }

@@ -2,17 +2,17 @@ package dao;
 
 import model.entities.Book;
 
-import javax.swing.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
 
-public class bookDAO {
+public class BookDAO {
 
     private Connection conexao;
 
-    public bookDAO(Connection conexao) {
+    public BookDAO(Connection conexao) {
         this.conexao = conexao;
     }
 
@@ -77,6 +77,33 @@ public class bookDAO {
             }
         }
         return resultado.toString();
+    }
+
+
+    //novo, listar acervo em tabela!
+    public DefaultTableModel listarAcervoTabela() throws SQLException {
+        // Usa a View conforme o PDF pede
+        String sql = "SELECT * FROM vw_acervo_publico";
+
+        // Cria o modelo da tabela (Cabeçalhos)
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("Título");
+        modelo.addColumn("Autor");
+        modelo.addColumn("Status");
+
+        try (PreparedStatement ps = conexao.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                // Adiciona cada linha do banco na tabela visual
+                modelo.addRow(new Object[]{
+                        rs.getString("Titulo"),
+                        rs.getString("Autor"),
+                        rs.getString("Disponibilidade") // Nome da coluna na View
+                });
+            }
+        }
+        return modelo;
     }
 
     // para devolução

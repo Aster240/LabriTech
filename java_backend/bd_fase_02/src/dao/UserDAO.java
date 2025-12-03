@@ -5,11 +5,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class userDAO {
+public class UserDAO {
 
     private Connection conexao;
 
-    public userDAO(Connection conexao) {
+    public UserDAO(Connection conexao) {
         this.conexao = conexao;
     }
 

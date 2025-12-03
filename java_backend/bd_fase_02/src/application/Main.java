@@ -1,7 +1,7 @@
 package application;
 
 import db.Conn;
-import dao.bookDAO;
+import dao.BookDAO;
 import javax.swing.JOptionPane;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -20,7 +20,7 @@ public class Main {
             conn = Conn.getConnection(dbUser, dbPass);
 
             // 2. Prepara o DAO principal (usado pelo Aluno)
-            bookDAO dao = new bookDAO(conn);
+            BookDAO dao = new BookDAO(conn);
 
             // 3. Escolhe o perfil
             String[] options = {"Funcionário", "Aluno", "Sair"};
