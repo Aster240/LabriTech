@@ -16,7 +16,7 @@ public class MenuFuncionario {
 
     public static void iniciar(Connection conn) {
 
-        BookDAO bookDao = new BookDAO(conn);
+        BookDAO bookDao = new BookDAO(conn); // alteração de nome com maiúscula feito.
         UserDAO userDao = new UserDAO(conn);
 
         String[] actions = {
@@ -117,10 +117,9 @@ public class MenuFuncionario {
                     String cidade = JOptionPane.showInputDialog("Cidade:");
                     String uf = JOptionPane.showInputDialog("UF (2 letras):");
 
-                    // DAO aceita 'User', mas estamos passando Student ou Employee (Polimorfismo)
                     userDao.cadastrarUsuarioCompleto(u, rua, bairro, cidade, uf);
 
-                    // Exibe o prazo só para mostrar ao professor que a lógica funcionou
+                    // Exibe o prazo lógica funcionou // 7 ou 14 dias
                     JOptionPane.showMessageDialog(null, "Usuário criado!\nClasse Java: " + u.getClass().getSimpleName() +
                             "\nPrazo de Empréstimo: " + u.getLoanDeadlineDays() + " dias.");
                 }
@@ -138,8 +137,7 @@ public class MenuFuncionario {
                 }
 
             } catch (SQLException e) {
-                // TRATAMENTO OBRIGATÓRIO (Item 5 do PDF)
-                // Se o banco disser "Access denied" (código 1142), mostramos msg bonita
+                // Se o banco disser "Access denied" (código 1142), mostramos a msg bonitinha
                 if (e.getMessage().toLowerCase().contains("denied") || e.getErrorCode() == 1142) {
                     JOptionPane.showMessageDialog(null,
                             "ERRO: ACESSO NEGADO!\n\n" +

@@ -275,7 +275,7 @@ END$$
 
 DELIMITER ;
 
-/* 5. USUÁRIOS E PERMISSÕES (Resetando para garantir limpeza)
+/* 5. USUÁRIOS E PERMISSÕES
 ======================================================= */
 DROP USER IF EXISTS 'usr_gerente'@'localhost';
 DROP USER IF EXISTS 'usr_bibliotecario'@'localhost';
@@ -299,7 +299,7 @@ GRANT EXECUTE ON PROCEDURE libritech.sp_renovar_emprestimo TO 'usr_bibliotecario
 GRANT EXECUTE ON PROCEDURE libritech.sp_transacao_devolucao TO 'usr_bibliotecario'@'localhost';
 GRANT EXECUTE ON PROCEDURE libritech.sp_transacao_cadastro_usuario TO 'usr_bibliotecario'@'localhost';
 
--- Estagiário (Segurança: Não pode deletar e não vê financeiro)
+-- Estagiário Não pode deletar e não vê financeiro, falta privilégios no coitchado
 CREATE USER 'usr_estagiario'@'localhost' IDENTIFIED BY 'senha_fraca';
 GRANT SELECT ON libritech.livros TO 'usr_estagiario'@'localhost';
 GRANT SELECT ON libritech.usuarios TO 'usr_estagiario'@'localhost';
