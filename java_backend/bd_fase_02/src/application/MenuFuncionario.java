@@ -8,7 +8,9 @@ import model.entities.Student;
 import model.entities.Employee;
 import model.enums.Rule;
 
-import javax.swing.JOptionPane;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -31,6 +33,7 @@ public class MenuFuncionario {
                 "6. Excluir Livro (Teste de Segurança)",
                 "7. Cadastrar Novo Usuário",
                 "8. Backup do Sistema",
+                "9. Listar livros",
                 "Voltar"
         };
 
@@ -137,6 +140,22 @@ public class MenuFuncionario {
                         JOptionPane.showMessageDialog(null, "Executando: " + cmd + "\n(Verifique a pasta do projeto)");
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(null, "Simulação de Backup concluída.");
+                    }
+
+                }
+
+                // 9. Listar livro Backup // simulação
+                else if (op.startsWith("9")) {
+                    try {
+                        DefaultTableModel model = bookDao.listarAcervoTabela();
+                        JTable tabela = new JTable(model);
+                        tabela.setFillsViewportHeight(true);
+                        JScrollPane scroll = new JScrollPane(tabela);
+                        scroll.setPreferredSize(new Dimension(500, 300));
+
+                        JOptionPane.showMessageDialog(null, scroll, "Acervo Disponível", JOptionPane.PLAIN_MESSAGE);
+                    } catch (Exception ex) {
+                        System.out.println("nao achei nada");
                     }
                 }
 

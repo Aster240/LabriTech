@@ -291,6 +291,8 @@ CREATE USER 'usr_bibliotecario'@'localhost' IDENTIFIED BY 'senha_chata';
 GRANT SELECT, INSERT, UPDATE ON libritech.livros TO 'usr_bibliotecario'@'localhost';
 GRANT SELECT, INSERT, UPDATE ON libritech.usuarios TO 'usr_bibliotecario'@'localhost';
 GRANT SELECT, INSERT, UPDATE ON libritech.emprestimos TO 'usr_bibliotecario'@'localhost';
+GRANT SELECT ON libritech.vw_acervo_publico TO 'usr_bibliotecario'@'localhost';
+GRANT SELECT ON libritech.vw_ranking_leitura TO 'usr_bibliotecario'@'localhost';
 GRANT SELECT ON libritech.enderecos TO 'usr_bibliotecario'@'localhost';
 GRANT SELECT, INSERT ON libritech.log_auditoria TO 'usr_bibliotecario'@'localhost';
 -- Permissão para rodar as procedures
