@@ -163,7 +163,7 @@ public class MenuFuncionario {
 
                     JOptionPane.showMessageDialog(null, scroll, "Logs de Auditoria", JOptionPane.PLAIN_MESSAGE);
                 }
-
+                // 11. ver qual livro está emprestado a quem
                 else if (op.startsWith("11.")) {
                     DefaultTableModel model = bookDao.listarEmprestimosAtivos();
                     JTable tabela = new JTable(model);
