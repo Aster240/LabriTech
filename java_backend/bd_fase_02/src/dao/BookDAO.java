@@ -1,12 +1,8 @@
 package dao;
 
 import model.entities.Book;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import javax.swing.table.DefaultTableModel;
-import java.sql.ResultSet;
+import java.sql.*;
 
 public class BookDAO {
 
@@ -18,163 +14,115 @@ public class BookDAO {
 
     public void cadastrarBook(Book book) throws SQLException {
         String sql = "INSERT INTO livros (titulo, autor, isbn, preco_custo, quantidade_estoque) VALUES (?, ?, ?, ?, ?)";
-
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             ps.setString(1, book.getTitle());
             ps.setString(2, book.getAuthor());
             ps.setString(3, book.getIsbn());
             ps.setDouble(4, book.getPrice());
-            ps.setInt(5,book.getInventory());
-
+            ps.setInt(5, book.getInventory());
             ps.execute();
         }
     }
 
     public void excluirBook(int id) throws SQLException {
         String sql = "DELETE FROM livros WHERE id_livro = ?";
-
         try (PreparedStatement ps = conexao.prepareStatement(sql)) {
             ps.setInt(1, id);
             ps.execute();
         }
     }
 
-    public void emprestarBook(int idUsuario, int idLivro) throws SQLException {
-        String sql = "CALL sp_transacao_emprestimo(?, ?)";
-
+    public void emprestarBook(int idUsuario, int idLivro, int diasPrazo) throws SQLException {
+        String sql = "CALL sp_transacao_emprestimo(?, ?, ?)"; // 3 interrogações
         try (PreparedStatement ps = conexao.prepareStatement(sql)){
             ps.setInt(1, idUsuario);
             ps.setInt(2, idLivro);
-
+            ps.setInt(3, diasPrazo); // Passa o prazo para o banco
             ps.execute();
         }
     }
 
     public void renovar(int idEmprestimo) throws SQLException {
         String sql = "CALL sp_renovar_emprestimo(?)";
-
         try (PreparedStatement ps = conexao.prepareStatement(sql)){
             ps.setInt(1, idEmprestimo);
-
             ps.execute();
         }
     }
 
-    // Consultar acervo - Aluno vw_acervo_publico
-    public String listarAcervo() throws SQLException {
-        String sql = "SELECT * FROM vw_acervo_publico";
-        StringBuilder resultado = new StringBuilder();
-
+    public void devolverBook(int idEmprestimo) throws SQLException {
+        String sql = "CALL sp_transacao_devolucao(?)";
         try (PreparedStatement ps = conexao.prepareStatement(sql)){
-            java.sql.ResultSet rs = ps.executeQuery();{
-                while (rs.next()) {
-                    //faz um loop construtor da frase, isso vai deixar a parada um pitel, tem formataçaõ
-                    resultado.append("Livro: ").append(rs.getString("Titulo")).append("\n");
-                    resultado.append("Autor: ").append(rs.getString("Autor")).append("\n");
-                    resultado.append("Status: ").append(rs.getString("Disponibilidade")).append("\n");
-                    resultado.append("----------------------------\n");
-                }
-            }
+            ps.setInt(1, idEmprestimo);
+            ps.execute();
         }
-        return resultado.toString();
     }
 
-
-    //novo, listar acervo em tabela!
+    //  List acervo em forma de tabela!
     public DefaultTableModel listarAcervoTabela() throws SQLException {
-        // Usa a View conforme o PDF pede
         String sql = "SELECT * FROM vw_acervo_publico";
-
-        // Cria o modelo da tabela (Cabeçalhos)
         DefaultTableModel modelo = new DefaultTableModel();
         modelo.addColumn("Título");
         modelo.addColumn("Autor");
-        modelo.addColumn("Status");
+        modelo.addColumn("Situação");
+        modelo.addColumn("Disponibilidade");
 
         try (PreparedStatement ps = conexao.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
-                // Adiciona cada linha do banco na tabela visual
                 modelo.addRow(new Object[]{
                         rs.getString("Titulo"),
                         rs.getString("Autor"),
-                        rs.getString("Disponibilidade") // Nome da coluna na View
+                        rs.getString("Status Disponibilidade"),
+                        rs.getString("Disponibilidade")
                 });
             }
         }
         return modelo;
     }
 
-    // para devolução
-    public void devolverBook(int idEmprestimo) throws SQLException {
-        String sql = "CALL sp_transacao_devolucao(?)";
+    // Histórico Seguro (Procedure)
+    public String verMeusEmprestimos(int idAluno) throws SQLException {
+        String sql = "{CALL sp_historico_usuario(?)}";
+        StringBuilder texto = new StringBuilder("== HISTÓRICO ==\n\n");
 
-        try (PreparedStatement ps = conexao.prepareStatement(sql)){
-            ps.setInt(1, idEmprestimo);
+        try (CallableStatement cs = conexao.prepareCall(sql)) {
+            cs.setInt(1, idAluno);
+            try (ResultSet rs = cs.executeQuery()) {
+                if (!rs.isBeforeFirst()) return "Nenhum registro encontrado.";
+                while (rs.next()) {
+                    texto.append("Livro: ").append(rs.getString("titulo")).append("\n");
+                    texto.append("Saída: ").append(rs.getTimestamp("data_saida")).append("\n");
+                    texto.append("Vence: ").append(rs.getDate("data_prevista")).append("\n");
 
-            ps.execute();
+                    if (rs.getObject("data_devolucao") != null)
+                        texto.append("Devolvido em: ").append(rs.getTimestamp("data_devolucao")).append("\n");
+                    else
+                        texto.append("STATUS: PENDENTE\n");
+
+                    texto.append("-----------------\n");
+                }
+            }
         }
+        return texto.toString();
     }
 
-    //Dash
+    // Dashboards
     public String verDashboardFinanceiro() throws SQLException {
         String sql = "SELECT * FROM vw_dashboard_financeiro";
-        StringBuilder texto = new StringBuilder();
-
-        try (PreparedStatement ps = conexao.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery()){
-            if (rs.next()){
-                texto.append("Multas pagas: ").append(rs.getInt("total_multas_pagas")).append("\n");
-                texto.append("Arrecadação Total: R$ ").append(rs.getDouble("arrecadacao_total")).append("\n");
-
-            }
+        try (Statement st = conexao.createStatement(); ResultSet rs = st.executeQuery(sql)){
+            if (rs.next()) return "Multas Pagas: " + rs.getInt("total_multas_pagas") + "\nTotal R$: " + rs.getDouble("arrecadacao_total");
         }
-        return texto.toString();
+        return "Sem dados";
     }
 
-    // rank
     public String verRankingLeitura() throws SQLException {
-        String sql = "SELECT * FROM vw_ranking_leitura"; //lembrar, limite está dentro da lógica do sheme.
-        StringBuilder texto = new StringBuilder();
-
-        try (PreparedStatement ps = conexao.prepareStatement(sql);
-        ResultSet rs = ps.executeQuery()){
-            int pos = 1;
-            while (rs.next()){
-                texto.append(pos).append(" - ").append(rs.getString("titulo")).append("\n");
-                pos++;
-            }
+        String sql = "SELECT * FROM vw_ranking_leitura";
+        StringBuilder sb = new StringBuilder();
+        try (Statement st = conexao.createStatement(); ResultSet rs = st.executeQuery(sql)){
+            int i = 1;
+            while(rs.next()) sb.append(i++).append(". ").append(rs.getString("titulo")).append("\n");
         }
-        return texto.toString();
+        return sb.toString();
     }
-
-    //histórico
-    public String verMeusEmprestimos(int idAluno) throws SQLException {
-        String sql = "SELECT l.titulo, e.data_saida, e.data_previsao" +
-                "FROM emprestimos" +
-                "JOIN livros l ON e.id_livro_fk = l.id_livro" +
-                "WHERE e.id_aluno_fk = ?";
-
-        StringBuilder texto = new StringBuilder("==MEU EMPRESTIMOS==\n");
-        try (PreparedStatement ps = conexao.prepareStatement(sql)){
-            ps.setInt(1, idAluno);
-            try (java.sql.ResultSet rs = ps.executeQuery()){
-                if (!rs.next()){ //se vázio
-                    return "Nenhum empréstimo encontrado para esse ID";
-                }
-                while (rs.next()){
-                    texto.append("Livro: ").append(rs.getString("titulo")).append("\n");
-                    texto.append("Pegou em: ").append(rs.getString("data_saida")).append("\n");
-                    texto.append("Devolver até: ").append(rs.getString("data_previsao")).append("\n");
-                    texto.append("------------------------------\n");
-                }
-            }
-        }
-        return texto.toString();
-    }
-
-
-
-
 }
